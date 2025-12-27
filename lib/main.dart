@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:team_braviant_desktop/screens/add_team_member_screen.dart';
+import 'package:team_braviant_desktop/screens/team_member_list_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -88,13 +89,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  Widget _currentScreen = const TeamMemberListScreen(); // Default to list screen
+
+  void _navigateTo(Widget screen) {
+    setState(() {
+      _currentScreen = screen;
+    });
+    Navigator.of(context).pop(); // Close the drawer
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Team Braviant', style: TextStyle(color: Color(0xFFFFD700), fontSize: 20, fontWeight: FontWeight.bold),),
       ),
-      body: const AddTeamMemberScreen(),
+      body: _currentScreen,
       endDrawer: Drawer(
         backgroundColor: Colors.grey[900], // Dark background for the drawer
         child: ListView(
@@ -113,24 +123,29 @@ class _MyHomePageState extends State<MyHomePage> {
               leading: Icon(Icons.home, color: Theme.of(context).colorScheme.primary), // Gold icon
               title: Text('Home', style: Theme.of(context).textTheme.bodyLarge), // White text
               onTap: () {
-                // Handle navigation
+                _navigateTo(const TeamMemberListScreen()); // Assuming home is the list screen
               },
             ),
             ListTile(
-              leading: Icon(Icons.settings, color: Theme.of(context).colorScheme.primary), // Gold icon
-              title: Text('Settings', style: Theme.of(context).textTheme.bodyLarge), // White text
+              leading: Icon(Icons.group, color: Theme.of(context).colorScheme.primary), // Gold icon
+              title: Text('View Team Members', style: Theme.of(context).textTheme.bodyLarge), // White text
               onTap: () {
-                // Handle navigation
+                _navigateTo(const TeamMemberListScreen());
               },
             ),
             ListTile(
               leading: Icon(Icons.person_add, color: Theme.of(context).colorScheme.primary), // Gold icon
               title: Text('Add Team Member', style: Theme.of(context).textTheme.bodyLarge), // White text
               onTap: () {
+                _navigateTo(const AddTeamMemberScreen());
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.settings, color: Theme.of(context).colorScheme.primary), // Gold icon
+              title: Text('Settings', style: Theme.of(context).textTheme.bodyLarge), // White text
+              onTap: () {
+                // Handle navigation to settings or implement a settings screen
                 Navigator.of(context).pop(); // Close the drawer
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const AddTeamMemberScreen()),
-                );
               },
             ),
           ],
