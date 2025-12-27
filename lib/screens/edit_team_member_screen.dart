@@ -1,54 +1,62 @@
 import 'package:flutter/material.dart';
 import '../models/team_member.dart';
 import '../services/database_helper.dart';
-import '../../main.dart'; // NEW IMPORT for Intents
+import '../../main.dart'; // For Intents
 
-class AddTeamMemberScreen extends StatefulWidget {
-  const AddTeamMemberScreen({super.key});
+class EditTeamMemberScreen extends StatefulWidget {
+  final TeamMember member;
+
+  const EditTeamMemberScreen({super.key, required this.member});
 
   @override
-  State<AddTeamMemberScreen> createState() => _AddTeamMemberScreenState();
+  State<EditTeamMemberScreen> createState() => _EditTeamMemberScreenState();
 }
 
-class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
+class _EditTeamMemberScreenState extends State<EditTeamMemberScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _roleController = TextEditingController();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _roleController;
 
   final DatabaseHelper _dbHelper = DatabaseHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.member.name);
+    _emailController = TextEditingController(text: widget.member.email);
+    _roleController = TextEditingController(text: widget.member.role);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _emailController.dispose();
     _roleController.dispose();
     super.dispose();
   }
 
-  Future<void> _saveTeamMember() async {
+  Future<void> _updateTeamMember() async {
     if (_formKey.currentState!.validate()) {
-      final teamMember = TeamMember(
+      final updatedMember = TeamMember(
+        id: widget.member.id, // Keep the original ID
         name: _nameController.text,
         email: _emailController.text,
         role: _roleController.text,
       );
 
       try {
-        await _dbHelper.insertMember(teamMember);
+        await _dbHelper.updateMember(updatedMember);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Team member added successfully!')),
+            const SnackBar(content: Text('Team member updated successfully!')),
           );
-          _nameController.clear();
-          _emailController.clear();
-          _roleController.clear();
+          Navigator.of(context).pop(); // Go back after update
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add team member: ${e.toString()}')),
+            SnackBar(content: Text('Failed to update team member: ${e.toString()}')),
           );
         }
       }
@@ -57,9 +65,9 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Actions( // LOCAL ACTIONS widget
+    return Actions(
       actions: <Type, Action<Intent>>{
-        SaveMemberIntent: CallbackAction<SaveMemberIntent>(onInvoke: (intent) => _saveTeamMember()),
+        SaveMemberIntent: CallbackAction<SaveMemberIntent>(onInvoke: (intent) => _updateTeamMember()),
         CancelIntent: CallbackAction<CancelIntent>(onInvoke: (intent) {
           Navigator.of(context).pop(); // Simply pop the screen
           return null;
@@ -67,28 +75,28 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Add Team Member'),
+          title: const Text('Edit Team Member'),
         ),
         body: SingleChildScrollView(
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 600),
               child: Padding(
-                padding: const EdgeInsets.all(24.0), // Increased padding
+                padding: const EdgeInsets.all(24.0),
                 child: Form(
                   key: _formKey,
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch children horizontally
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: <Widget>[
                       Text(
-                        'Welcome! Add New Team Member',
+                        'Edit Team Member Details',
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.bold,
                             ),
-                        textAlign: TextAlign.center, // Center the title
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 32.0), // Increased spacing
+                      const SizedBox(height: 32.0),
                       TextFormField(
                         controller: _nameController,
                         decoration: InputDecoration(
@@ -107,7 +115,7 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20.0), // Consistent spacing
+                      const SizedBox(height: 20.0),
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
@@ -129,7 +137,7 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20.0), // Consistent spacing
+                      const SizedBox(height: 20.0),
                       TextFormField(
                         controller: _roleController,
                         decoration: InputDecoration(
@@ -148,15 +156,15 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 32.0), // Increased spacing before buttons
+                      const SizedBox(height: 32.0),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribute buttons
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: () => Actions.invoke(context, const CancelIntent()), // Dispatch CancelIntent
+                              onPressed: () => Actions.invoke(context, const CancelIntent()),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Theme.of(context).colorScheme.primary, // Gold border/text
+                                foregroundColor: Theme.of(context).colorScheme.primary,
                                 side: BorderSide(color: Theme.of(context).colorScheme.primary),
                                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -164,17 +172,17 @@ class _AddTeamMemberScreenState extends State<AddTeamMemberScreen> {
                               child: const Text('Cancel'),
                             ),
                           ),
-                          const SizedBox(width: 20), // Spacing between buttons
+                          const SizedBox(width: 20),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () => Actions.invoke(context, const SaveMemberIntent()), // Dispatch SaveMemberIntent
+                              onPressed: () => Actions.invoke(context, const SaveMemberIntent()),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Theme.of(context).colorScheme.primary,
                                 foregroundColor: Theme.of(context).colorScheme.onPrimary,
                                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                                 textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                              child: const Text('Add Member'),
+                              child: const Text('Update Member'),
                             ),
                           ),
                         ],

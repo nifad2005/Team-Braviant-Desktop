@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/team_member.dart';
+import 'package:flutter/foundation.dart'; // Import for debugPrint
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -46,11 +47,18 @@ class DatabaseHelper {
 
   Future<int> insertMember(TeamMember member) async {
     Database db = await database;
-    return await db.insert(
-      'team_members',
-      member.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    try {
+      final id = await db.insert(
+        'team_members',
+        member.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      debugPrint('Inserted member with id: $id');
+      return id;
+    } catch (e) {
+      debugPrint('Error inserting member: $e');
+      rethrow; // Rethrow the exception to be handled by the caller
+    }
   }
 
   Future<List<TeamMember>> getMembers() async {
@@ -64,21 +72,35 @@ class DatabaseHelper {
 
   Future<int> updateMember(TeamMember member) async {
     Database db = await database;
-    return await db.update(
-      'team_members',
-      member.toMap(),
-      where: 'id = ?',
-      whereArgs: [member.id],
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    try {
+      final rowsAffected = await db.update(
+        'team_members',
+        member.toMap(),
+        where: 'id = ?',
+        whereArgs: [member.id],
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      debugPrint('Updated member with id: ${member.id}, rows affected: $rowsAffected');
+      return rowsAffected;
+    } catch (e) {
+      debugPrint('Error updating member: $e');
+      rethrow; // Rethrow the exception to be handled by the caller
+    }
   }
 
   Future<int> deleteMember(int id) async {
     Database db = await database;
-    return await db.delete(
-      'team_members',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    try {
+      final rowsAffected = await db.delete(
+        'team_members',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      debugPrint('Deleted member with id: $id, rows affected: $rowsAffected');
+      return rowsAffected;
+    } catch (e) {
+      debugPrint('Error deleting member: $e');
+      rethrow; // Rethrow the exception to be handled by the caller
+    }
   }
 }
